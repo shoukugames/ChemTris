@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=ChemTris
+Name[ja]=ケムトリス
+GenericName=Chemistry Puzzle
+GenericName[ja]=化学パズル
+Comment=Build molecules from falling atoms
+Comment[ja]=落ちてくる原子を組み合わせて分子を作るパズル
+Exec=chemtris
+Icon=chemtris
+Terminal=false
+Categories=Game;LogicGame;Education;Chemistry;
+Keywords=chemistry;molecule;puzzle;kids;science;
