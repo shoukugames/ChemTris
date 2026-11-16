@@ -4,7 +4,7 @@ import random
 
 import pygame
 
-from . import RELEASE_DATE, __version__, art, storage
+from . import WEB, RELEASE_DATE, __version__, art, storage
 from .audio import FUR_ELISE, NACHTMUSIK
 from .config import (ACCENT, BAD, ELEMENTS, GOLD, GOOD, HEIGHT, TEXT, TEXT_DIM, WIDTH, PANEL_EDGE)
 from .i18n import ENGLISH, JAPANESE, language, pick, set_language, t
@@ -83,7 +83,7 @@ class TitleScene:
         self.falling = [Falling(self.rng) for _ in range(26)]
         self.menu = Menu([("play", lambda: t("play")), ("how", lambda: t("how_to")),
                           ("parents", lambda: t("parents")), ("settings", lambda: t("settings")),
-                          ("credits", lambda: t("credits")), ("quit", lambda: t("quit"))],
+                          ("credits", lambda: t("credits"))] + ([] if WEB else [("quit", lambda: t("quit"))]),
                          (WIDTH // 2, 470), 340, 50, 10)
         self.toggle = LanguageToggle()
         app.audio.music(NACHTMUSIK)
@@ -98,7 +98,7 @@ class TitleScene:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_l:
             self._set_language(JAPANESE if language() == ENGLISH else ENGLISH)
             return
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and not WEB:
             self.app.running = False
             return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:

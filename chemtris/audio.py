@@ -12,6 +12,8 @@ import threading
 
 import pygame
 
+from . import WEB
+
 RATE = 22050
 TWO_PI = 2 * math.pi
 TABLE = 2048
@@ -265,17 +267,38 @@ class Audio:
         except pygame.error:
             return
         self._make_effects()
-        self.thread = threading.Thread(target=self._render_songs, daemon=True)
-        self.thread.start()
+        self.pending = []
+        if WEB:
+            # Browsers run no Python threads: render one song per frame in update() instead,
+            # songs the player hears first ahead of the rest.
+            self.pending = list(ALL_SONGS)
+        else:
+            self.thread = threading.Thread(target=self._render_songs, daemon=True)
+            self.thread.start()
+
+    def _drums(self):
+        if not hasattr(self, "_drum_sounds"):
+            self._drum_sounds = {"kick": to_sound(sweep(0.14, 150, 45, "sine", 0.9, 5)),
+                                 "hat": to_sound(noise(0.05, 0.35, 0.9, 60, seed=4))}
+        return self._drum_sounds
 
     def _render_songs(self):
-        drums = {"kick": to_sound(sweep(0.14, 150, 45, "sine", 0.9, 5)),
-                 "hat": to_sound(noise(0.05, 0.35, 0.9, 60, seed=4))}
         for song in ALL_SONGS:
             try:
-                song.render(drums)
+                song.render(self._drums())
             except pygame.error:
                 return
+
+    def _render_next(self):
+        if self.song in self.pending:  # the song that should be playing now goes first
+            self.pending.remove(self.song)
+            song = self.song
+        else:
+            song = self.pending.pop(0)
+        try:
+            song.render(self._drums())
+        except pygame.error:
+            self.pending = []
 
     def _make_effects(self):
         s = self.sfx
@@ -324,6 +347,8 @@ class Audio:
         self.music(None)
 
     def update(self, dt):
+        if self.pending:
+            self._render_next()
         if not self.enabled or self.song is None or not self.song.ready:
             return
         if self.duck > 0:

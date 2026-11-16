@@ -105,6 +105,8 @@ class PlayScene:
         self.recorded = False
         self.new_best = False
         self.held = {}              # key -> time held
+        from .touch import TouchPad
+        self.pad = TouchPad()       # on-screen buttons (touch screens)
         self.glow = set()
         self.card_anim = 0.0
         self.danger = 0.0
@@ -163,6 +165,16 @@ class PlayScene:
                 self.leave()
                 from .scenes import TitleScene
                 self.app.switch(TitleScene(self.app))
+            return
+        if self.app.touch and event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP) and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                key = self.pad.hit(event.pos)
+                if key is not None:
+                    self.pad.down = key
+                    self.handle(pygame.event.Event(pygame.KEYDOWN, key=key))
+            elif self.pad.down is not None:
+                key, self.pad.down = self.pad.down, None
+                self.handle(pygame.event.Event(pygame.KEYUP, key=key))
             return
         if event.type == pygame.KEYDOWN:
             k = event.key
@@ -494,6 +506,10 @@ class PlayScene:
         # Controls
         ctl = pygame.Rect(x, stats.bottom + 16, w, HEIGHT - 24 - stats.bottom - 16)
         art.panel(surf, ctl)
+        if self.app.touch:
+            self.pad.layout(ctl)
+            self.pad.draw(surf, self.app.settings.get("music", True))
+            return
         art.text_block(surf, t("controls"), 17, TEXT_DIM, (ctl.left + 18, ctl.top + 14), w - 36, 6)
         music = "♪ M" if self.app.settings.get("music", True) else "♪ M ×"
         art.text(surf, music, 16, TEXT_DIM, (ctl.right - 16, ctl.bottom - 12), "bottomright")

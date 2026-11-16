@@ -10,6 +10,8 @@ import sys
 import tempfile
 import time
 
+from . import WEB
+
 SESSIONS_KEPT = 50
 ERRORS_KEPT = 100
 
@@ -31,7 +33,20 @@ def data_dir():
     return path
 
 
+# In a web browser files vanish when the page closes, so saves go to the browser's localStorage.
+def _web_storage():
+    import platform  # pygbag's bridge to the page; has .window
+    return platform.window.localStorage
+
+
 def _load(name, default):
+    if WEB:
+        try:
+            raw = _web_storage().getItem(f"chemtris/{name}")
+            data = json.loads(raw) if raw else default
+            return data if isinstance(data, type(default)) else default
+        except Exception:
+            return default
     path = os.path.join(data_dir(), name)
     try:
         with open(path, encoding="utf-8") as handle:
@@ -50,6 +65,12 @@ def _load(name, default):
 
 
 def _save(name, data):
+    if WEB:
+        try:
+            _web_storage().setItem(f"chemtris/{name}", json.dumps(data, ensure_ascii=False))
+        except Exception as error:
+            print(f"Could not save {name}: {error}", file=sys.stderr)
+        return
     path = os.path.join(data_dir(), name)
     temp = path + ".tmp"
     try:

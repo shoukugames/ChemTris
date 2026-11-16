@@ -9,7 +9,7 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 import pygame  # noqa: E402
 
-from . import __version__, storage  # noqa: E402
+from . import WEB, __version__, storage  # noqa: E402
 from .art import Background  # noqa: E402
 from .audio import Audio  # noqa: E402
 from .config import FPS, HEIGHT, TITLE, WIDTH  # noqa: E402
@@ -35,6 +35,9 @@ class App:
         self.background = Background()
         self.scene = None
         self.running = True
+        # On-screen buttons: on for touch screens, or as soon as a finger touches the game.
+        from .touch import has_touch_screen
+        self.touch = WEB and has_touch_screen()
 
     def _open_window(self):
         flags = pygame.SCALED | pygame.RESIZABLE
@@ -56,8 +59,10 @@ class App:
         self.scene = scene
 
     def dispatch(self, event):
+        if event.type == pygame.FINGERDOWN:
+            self.touch = True
         if event.type == pygame.QUIT:
-            self.running = False
+            self.running = WEB  # in a browser there is nothing to quit to
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
             self.toggle_fullscreen()
             storage.save_settings(self.settings)
@@ -70,20 +75,38 @@ class App:
         self.scene.update(dt)
         self.scene.draw(self.screen)
 
-    def run(self):
+    def frame(self):
+        dt = min(self.clock.tick(FPS) / 1000.0, 0.05)
+        for event in pygame.event.get():
+            self.dispatch(event)
+        self.step(dt)
+        pygame.display.flip()
+
+    def _start(self):
         from .scenes import TitleScene
         if self.scene is None:
             self.switch(TitleScene(self))
-        while self.running:
-            dt = min(self.clock.tick(FPS) / 1000.0, 0.05)
-            for event in pygame.event.get():
-                self.dispatch(event)
-            self.step(dt)
-            pygame.display.flip()
+
+    def _finish(self):
         if hasattr(self.scene, "leave"):
             self.scene.leave()
         storage.save_settings(self.settings)
         pygame.quit()
+
+    def run(self):
+        self._start()
+        while self.running:
+            self.frame()
+        self._finish()
+
+    async def run_web(self):
+        """Browser main loop: hands control back to the page after every frame."""
+        import asyncio
+        self._start()
+        while True:  # a web page has no "quit"; closing the tab ends the game
+            self.running = True
+            self.frame()
+            await asyncio.sleep(0)
 
 
 def _smoke_test(path):

@@ -126,6 +126,28 @@ Download from the releases:
   `sudo apt install ./chemtris_v0.1.0_amd64.deb` and start **ChemTris** from the
   menu or type `chemtris`.
 
+## Play in the browser
+
+ChemTris also runs in a web browser, on computers, phones and tablets, with nothing to
+install: <https://shoukugames.org/play/chemtris/> (test page).
+
+On touch screens, on-screen buttons replace the keyboard during play: move, soft drop,
+hard drop, rotate both ways, pause and music. Settings and the progress record are saved
+in the browser.
+
+The web version is built with [pygbag](https://pygame-web.github.io/) from the same code;
+`main.py` is its entry point, and the browser-only parts (main loop, music rendering,
+saving, touch buttons) only switch on in the browser.
+
+```bash
+python3 -m pip install pygbag
+python3 -m pygbag --build --title "ChemTris" --app_name chemtris --icon assets/icon.png .
+# -> build/web/ (index.html, chemtris.apk, chemtris.tar.gz, favicon.png): upload as-is
+python3 -m pygbag .              # or build and test at http://localhost:8000
+```
+
+`chemtris.apk` is pygbag's name for its bundle of game files; it is not an Android app.
+
 ## Run from source
 
 Needs Python 3.9+.
