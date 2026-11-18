@@ -250,6 +250,7 @@ def jingle(notes, step, inst="bell", bass=None):
 
 class Audio:
     def __init__(self, settings):
+        global RATE  # the browser may change it (see below)
         self.settings = settings
         self.enabled = False
         self.sfx = {}
@@ -260,6 +261,10 @@ class Audio:
         self.duck = 0.0
         try:
             pygame.mixer.init(RATE, -16, 1, 512)
+            if WEB:
+                # Browsers mix at their own rate (48000 Hz): make the sounds at that rate so they keep
+                # their pitch and speed (the synth reads RATE as it runs).
+                RATE = pygame.mixer.get_init()[0]
             pygame.mixer.set_num_channels(20)
             pygame.mixer.set_reserved(MUSIC_CHANNELS)
             self.channels = [pygame.mixer.Channel(i) for i in range(MUSIC_CHANNELS)]
