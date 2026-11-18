@@ -140,10 +140,8 @@ The web version is built with [pygbag](https://pygame-web.github.io/) from the s
 saving, touch buttons) only switch on in the browser.
 
 ```bash
-python3 -m pip install pygbag
-python3 -m pygbag --build --title "ChemTris" --app_name chemtris --icon assets/icon.png .
-# -> build/web/ (index.html, chemtris.apk, chemtris.tar.gz, favicon.png): upload as-is
-python3 -m pygbag .              # or build and test at http://localhost:8000
+python3 -m pip install pygame pygbag
+python3 tools/build_web.py       # -> build/web/ (index.html, chemtris.apk, ...): upload as-is
 ```
 
 `chemtris.apk` is pygbag's name for its bundle of game files; it is not an Android app.
