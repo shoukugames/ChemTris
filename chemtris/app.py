@@ -18,6 +18,10 @@ from .i18n import resource, set_language  # noqa: E402
 
 class App:
     def __init__(self, fullscreen=None):
+        # Open the audio device in the format the synthesised sounds are made in (22050 Hz mono).
+        # Without this, pygame.init() opens it at 44100 Hz stereo first and every sound plays 4x fast.
+        from .audio import RATE
+        pygame.mixer.pre_init(RATE, -16, 1, 512)
         pygame.init()
         pygame.display.set_caption(f"{TITLE} v{__version__}")
         self.settings = storage.load_settings()
